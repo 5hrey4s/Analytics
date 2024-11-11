@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Verify GitLab secret token
     const gitlabToken = req.headers.get('x-gitlab-token');
     if (gitlabToken !== process.env.GITLAB_SECRET_TOKEN) {
+      console.log("token",process.env.GITLAB_SECRET_TOKEN)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
