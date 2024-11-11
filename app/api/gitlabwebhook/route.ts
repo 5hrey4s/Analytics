@@ -29,19 +29,21 @@ export async function POST(req: NextRequest) {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.ASANA_TOKEN}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           data: {
             name: `GitLab Issue: ${issueTitle}`,
             notes: issueDescription,
-            projects: [process.env.ASANA_PROJECT_ID]
-          }
-        })
+            projects: [process.env.ASANA_PROJECT_ID],  // Ensure this project ID is valid
+          },
+        }),
       });
 
+      // Handle if the response from Asana is not ok
       if (!response.ok) {
         const errorDetails = await response.json();
+        console.error('Asana API error:', errorDetails); // Add detailed logging for debugging
         return NextResponse.json(
           { message: 'Failed to create Asana task', errorDetails },
           { status: 500 }
