@@ -5,6 +5,8 @@ interface GitLabIssueEvent {
   object_attributes: {
     title: string;
     description: string;
+    due_date: string | null;  // Optional due date
+    assignee_ids: number[];   // Array of assignee IDs
   };
 }
 
@@ -13,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Verify GitLab secret token
     const gitlabToken = req.headers.get('x-gitlab-token');
     if (gitlabToken !== process.env.GITLAB_SECRET_TOKEN) {
-      console.log("token",process.env.GITLAB_SECRET_TOKEN)
+      console.log("token", process.env.GITLAB_SECRET_TOKEN);
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,7 +26,12 @@ export async function POST(req: NextRequest) {
     if (event.object_kind === 'issue') {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
+      const dueDate = event.object_attributes.due_date;
+      const assigneeIds = event.object_attributes.assignee_ids;
 
+      // Convert GitLab assignee ID to an Asana assignee ID
+      const asanaAssigneeId = process.env.ASANA_ASSIGNEE_ID || null; // Adjust this if there’s a mapping
+      
       // Step 4: Create a task in Asana using the Asana API
       const response = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
@@ -34,9 +41,11 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           data: {
-            name: `GitLab Issue: ${issueTitle}`,
+            name: issueTitle,
             notes: issueDescription,
-            projects: [process.env.ASANA_PROJECT_ID],  // Ensure this project ID is valid
+            due_on: dueDate,  // Set the due date from GitLab issue
+            assignee: asanaAssigneeId,  // Assign to the user in Asana (if mapping exists)
+            projects: [process.env.ASANA_PROJECT_ID],
           },
         }),
       });
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
       // Handle if the response from Asana is not ok
       if (!response.ok) {
         const errorDetails = await response.json();
-        console.error('Asana API error:', errorDetails); // Add detailed logging for debugging
+        console.error('Asana API error:', errorDetails);
         return NextResponse.json(
           { message: 'Failed to create Asana task', errorDetails },
           { status: 500 }
