@@ -5,8 +5,8 @@ interface GitLabIssueEvent {
   object_attributes: {
     title: string;
     description: string;
-    due_date: string | null;  // Optional due date
-    assignee_ids: number[];   // Array of assignee IDs
+    due_date: string | null;
+    assignee_ids: number[];
   };
 }
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Verify GitLab secret token
     const gitlabToken = req.headers.get('x-gitlab-token');
     if (gitlabToken !== process.env.GITLAB_SECRET_TOKEN) {
-      console.log("token", process.env.GITLAB_SECRET_TOKEN);
+      console.log("Invalid GitLab token.");
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -27,12 +27,18 @@ export async function POST(req: NextRequest) {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
-      const assigneeIds = event.object_attributes.assignee_ids;
 
-      // Convert GitLab assignee ID to an Asana assignee ID
-      const asanaAssigneeId = assigneeIds[0] || null; // Adjust this if there’s a mapping
-      
-      // Step 4: Create a task in Asana using the Asana API
+      // Step 4: Map GitLab assignee ID to Asana assignee ID
+      const gitlabAssigneeId = event.object_attributes.assignee_ids[0];
+      const asanaUserMap = JSON.parse(process.env.GITLAB_TO_ASANA_USER_MAP || '{}');
+      const asanaAssigneeId = asanaUserMap[gitlabAssigneeId];
+
+      if (!asanaAssigneeId) {
+        console.error(`No Asana ID mapped for GitLab user ID: ${gitlabAssigneeId}`);
+        return NextResponse.json({ message: 'Assignee not found in Asana mapping' }, { status: 400 });
+      }
+
+      // Step 5: Create a task in Asana using the Asana API
       const response = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
         headers: {
@@ -43,17 +49,16 @@ export async function POST(req: NextRequest) {
           data: {
             name: issueTitle,
             notes: issueDescription,
-            due_on: dueDate,  // Set the due date from GitLab issue
-            assignee: asanaAssigneeId,  // Assign to the user in Asana (if mapping exists)
+            due_on: dueDate,
+            assignee: asanaAssigneeId,
             projects: [process.env.ASANA_PROJECT_ID],
           },
         }),
       });
 
-      // Handle if the response from Asana is not ok
       if (!response.ok) {
         const errorDetails = await response.json();
-        console.error('Asana API error:', errorDetails);
+        console.error('Failed to create task in Asana:', errorDetails);
         return NextResponse.json(
           { message: 'Failed to create Asana task', errorDetails },
           { status: 500 }
@@ -61,14 +66,13 @@ export async function POST(req: NextRequest) {
       }
 
       const asanaData = await response.json();
-      console.log(`Created task in Asana with ID: ${asanaData.data.gid}`);
+      console.log(`Task created in Asana with ID: ${asanaData.data.gid}`);
 
       return NextResponse.json({ message: 'Task created in Asana' }, { status: 200 });
     } else {
       return NextResponse.json({ message: 'Event not handled' }, { status: 200 });
     }
   } catch (error: unknown) {
-    // Step 5: Type assertion to narrow down the error type
     if (error instanceof Error) {
       console.error('Error processing webhook:', error.message);
       return NextResponse.json({ message: 'Internal Server Error', error: error.message }, { status: 500 });
