@@ -70,10 +70,10 @@ export async function POST(req: NextRequest) {
 
       const asanaData = await asanaResponse.json();
       const asanaTaskId = asanaData.data.gid;  // Asana task ID
-      const asanaTaskUrl = `https://app.asana.com/0/{workspace-id}/${asanaTaskId}`;  // Asana task URL
+      const asanaTaskUrl = `https://app.asana.com/0/1208551183794158/${asanaTaskId}`;  // Asana task URL
 
       // Step 6: Update the GitLab issue description with the Asana task link
-      const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/62851225/issues/${gitlabIssueIid}`, {
+      const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/issues/${gitlabIssueIid}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${process.env.GITLAB_SECRET_TOKEN}`,
