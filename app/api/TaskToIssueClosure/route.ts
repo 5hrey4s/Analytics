@@ -1,19 +1,19 @@
 // Example for creating an Asana webhook using the Asana API
-const response = await fetch('https://app.asana.com/api/1.0/webhooks', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.ASANA_TOKEN}`,
-      'Content-Type': 'application/json',
+await fetch('https://app.asana.com/api/1.0/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${process.env.ASANA_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    data: {
+      resource: '1208551231881087', // Project ID in Asana where tasks are being tracked
+      target: 'https://analytics-73as.vercel.app/api/TaskToIssueClosure', // Your server endpoint
     },
-    body: JSON.stringify({
-      data: {
-        resource: '1208551231881087', // Project ID in Asana where tasks are being tracked
-        target: 'https://analytics-73as.vercel.app/api/TaskToIssueClosure', // Your server endpoint
-      },
-    }),
-  });
+  }),
+});
 
-  import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface AsanaTaskEvent {
   resource: {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Check if the task is marked as completed
     if (event.resource.completed) {
       const taskName = event.resource.name;
-      
+
       // Extract the GitLab issue ID from the task name (assumes "GitLab Issue: #42 - Task Title" format)
       const match = taskName.match(/GitLab Issue: #(\d+)/);
       if (!match) {
