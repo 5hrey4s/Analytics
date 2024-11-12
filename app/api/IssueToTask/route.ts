@@ -7,7 +7,8 @@ interface GitLabIssueEvent {
     description: string;
     due_date: string | null;
     assignee_ids: number[];
-    assignee_id:number
+    assignee_id: number;
+    id: number;  // GitLab issue ID
   };
 }
 
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
+      const gitlabIssueId = event.object_attributes.id; // GitLab issue ID
 
       // Step 4: Map GitLab assignee ID to Asana assignee ID
       const gitlabAssigneeId = event.object_attributes.assignee_id;
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Step 5: Create a task in Asana using the Asana API
-      const response = await fetch('https://app.asana.com/api/1.0/tasks', {
+      const asanaResponse = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.ASANA_TOKEN}`,
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           data: {
             name: issueTitle,
-            notes: issueDescription,
+            notes: `${issueDescription}\n\nGitLab Issue Link: https://gitlab.com/productivity-tools1/productivity-analytics-tool/-/issues/${gitlabIssueId}`,
             due_on: dueDate,
             assignee: asanaAssigneeId,
             projects: [process.env.ASANA_PROJECT_ID],
@@ -57,8 +59,8 @@ export async function POST(req: NextRequest) {
         }),
       });
 
-      if (!response.ok) {
-        const errorDetails = await response.json();
+      if (!asanaResponse.ok) {
+        const errorDetails = await asanaResponse.json();
         console.error('Failed to create task in Asana:', errorDetails);
         return NextResponse.json(
           { message: 'Failed to create Asana task', errorDetails },
@@ -66,10 +68,34 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const asanaData = await response.json();
-      console.log(`Task created in Asana with ID: ${asanaData.data.gid}`);
+      const asanaData = await asanaResponse.json();
+      const asanaTaskId = asanaData.data.gid;  // Asana task ID
+      const asanaTaskUrl = `https://app.asana.com/0/{workspace-id}/${asanaTaskId}`;  // Asana task URL
 
-      return NextResponse.json({ message: 'Task created in Asana' }, { status: 200 });
+      // Step 6: Update the GitLab issue description with the Asana task link
+      const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/62851225/issues/${gitlabIssueId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: `${issueDescription}\n\nAsana Task Link: ${asanaTaskUrl}`,
+        }),
+      });
+
+      if (!gitlabUpdateResponse.ok) {
+        const errorDetails = await gitlabUpdateResponse.json();
+        console.error('Failed to update GitLab issue:', errorDetails);
+        return NextResponse.json(
+          { message: 'Failed to update GitLab issue', errorDetails },
+          { status: 500 }
+        );
+      }
+
+      console.log(`Task created in Asana with ID: ${asanaTaskId} and linked to GitLab Issue #${gitlabIssueId}`);
+
+      return NextResponse.json({ message: 'Task created in Asana and linked to GitLab Issue' }, { status: 200 });
     } else {
       return NextResponse.json({ message: 'Event not handled' }, { status: 200 });
     }
