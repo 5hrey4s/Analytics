@@ -8,7 +8,7 @@ interface GitLabIssueEvent {
     due_date: string | null;
     assignee_ids: number[];
     assignee_id: number;
-    id: number;  // GitLab issue ID
+    iid: number;  // GitLab issue ID
   };
 }
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
-      const gitlabIssueId = event.object_attributes.id; // GitLab issue ID
+      const gitlabIssueId = event.object_attributes.iid; // GitLab issue ID
 
       // Step 4: Map GitLab assignee ID to Asana assignee ID
       const gitlabAssigneeId = event.object_attributes.assignee_id;
