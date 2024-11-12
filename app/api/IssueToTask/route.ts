@@ -8,7 +8,7 @@ interface GitLabIssueEvent {
     due_date: string | null;
     assignee_ids: number[];
     assignee_id: number;
-    id: number;  // GitLab issue ID
+    iid: number;  // GitLab issue ID
   };
 }
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
-      const gitlabIssueId = event.object_attributes.id; // GitLab issue ID
+      const gitlabIssueIid = event.object_attributes.iid; // GitLab issue ID
 
       // Step 4: Map GitLab assignee ID to Asana assignee ID
       const gitlabAssigneeId = event.object_attributes.assignee_ids[0];
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           data: {
             name: issueTitle,
-            notes: `${issueDescription}\n\nGitLab Issue Link: https://gitlab.com/productivity-tools1/productivity-analytics-tool/-/issues/${gitlabIssueId}`,
+            notes: `${issueDescription}\n\nGitLab Issue Link: https://gitlab.com/productivity-tools1/productivity-analytics-tool/-/issues/${gitlabIssueIid}`,
             due_on: dueDate,
             assignee: asanaAssigneeId,
             projects: [process.env.ASANA_PROJECT_ID],
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       const asanaTaskUrl = `https://app.asana.com/0/{workspace-id}/${asanaTaskId}`;  // Asana task URL
 
       // Step 6: Update the GitLab issue description with the Asana task link
-      const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/62851225/issues/${gitlabIssueId}`, {
+      const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/62851225/issues/${gitlabIssueIid}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      console.log(`Task created in Asana with ID: ${asanaTaskId} and linked to GitLab Issue #${gitlabIssueId}`);
+      console.log(`Task created in Asana with ID: ${asanaTaskId} and linked to GitLab Issue #${gitlabIssueIid}`);
 
       return NextResponse.json({ message: 'Task created in Asana and linked to GitLab Issue' }, { status: 200 });
     } else {
