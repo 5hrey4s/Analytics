@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       const assigneeIds = event.object_attributes.assignee_ids;
 
       // Convert GitLab assignee ID to an Asana assignee ID
-      const asanaAssigneeId = process.env.ASANA_ASSIGNEE_ID || null; // Adjust this if there’s a mapping
+      const asanaAssigneeId = assigneeIds[0] || null; // Adjust this if there’s a mapping
       
       // Step 4: Create a task in Asana using the Asana API
       const response = await fetch('https://app.asana.com/api/1.0/tasks', {
