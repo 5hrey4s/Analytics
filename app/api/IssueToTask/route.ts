@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       const gitlabIssueId = event.object_attributes.id; // GitLab issue ID
 
       // Step 4: Map GitLab assignee ID to Asana assignee ID
-      const gitlabAssigneeId = event.object_attributes.assignee_id;
+      const gitlabAssigneeId = event.object_attributes.assignee_ids[0];
       const asanaUserMap = JSON.parse(process.env.GITLAB_TO_ASANA_USER_MAP || '{}');
       const asanaAssigneeId = asanaUserMap[gitlabAssigneeId];
 
