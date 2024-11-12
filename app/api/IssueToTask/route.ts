@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/62851225/issues/${gitlabIssueIid}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
+          'Authorization': `Bearer ${process.env.GITLAB_SECRET_TOKEN}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
