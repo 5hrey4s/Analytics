@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
     // Step 3: Handle only "issue" events where the action is "open"
     if (event.object_kind === 'issue' && event.object_attributes.action === 'open') {
       const issueTitle = event.object_attributes.title;
-      const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
       const gitlabIssueIid = event.object_attributes.iid;
 
