@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       const taskDescription = event.resource.notes;
 
       // Extract GitLab issue ID
-      const match = taskDescription.match(/GitLab Issue #(\d+)/);
+      const match = taskDescription.match(/https:\/\/gitlab\.com\/[^/]+\/[^/]+\/-\/issues\/(\d+)/);
       if (!match) {
         console.error('GitLab issue ID not found in Asana task description.');
         return NextResponse.json({ message: 'GitLab issue ID not found' }, { status: 400 });
