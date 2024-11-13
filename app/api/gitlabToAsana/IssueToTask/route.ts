@@ -9,6 +9,7 @@ interface GitLabIssueEvent {
     assignee_ids: number[];
     assignee_id: number;
     iid: number;  // GitLab issue ID
+    action: string;  // Action type (e.g., "open", "update", etc.)
   };
 }
 
@@ -22,14 +23,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 2: Parse the incoming GitLab webhook event
-    const event = await req.json() as GitLabIssueEvent;
+    const event = (await req.json()) as GitLabIssueEvent;
 
-    // Step 3: Handle the issue event
-    if (event.object_kind === 'issue') {
+    // Step 3: Handle only "issue" events where the action is "open"
+    if (event.object_kind === 'issue' && event.object_attributes.action === 'open') {
       const issueTitle = event.object_attributes.title;
       const issueDescription = event.object_attributes.description;
       const dueDate = event.object_attributes.due_date;
-      const gitlabIssueIid = event.object_attributes.iid; // GitLab issue ID
+      const gitlabIssueIid = event.object_attributes.iid;
 
       // Step 4: Map GitLab assignee ID to Asana assignee ID
       const gitlabAssigneeId = event.object_attributes.assignee_ids[0];
@@ -69,8 +70,8 @@ export async function POST(req: NextRequest) {
       }
 
       const asanaData = await asanaResponse.json();
-      const asanaTaskId = asanaData.data.gid;  // Asana task ID
-      const asanaTaskUrl = `https://app.asana.com/0/1208551183794158/${asanaTaskId}`;  // Asana task URL
+      const asanaTaskId = asanaData.data.gid;
+      const asanaTaskUrl = `https://app.asana.com/0/1208551183794158/${asanaTaskId}`;
 
       // Step 6: Update the GitLab issue description with the Asana task link
       const gitlabUpdateResponse = await fetch(`https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/issues/${gitlabIssueIid}`, {
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ message: 'Task created in Asana and linked to GitLab Issue' }, { status: 200 });
     } else {
+      console.log('Event not handled or not an issue creation event.');
       return NextResponse.json({ message: 'Event not handled' }, { status: 200 });
     }
   } catch (error: unknown) {
