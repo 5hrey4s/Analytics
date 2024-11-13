@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           data: {
             name: issueTitle,
-            notes: `${issueDescription}\n\nGitLab Issue Link: https://gitlab.com/productivity-tools1/productivity-analytics-tool/-/issues/${gitlabIssueIid}`,
+            notes: `GitLab Issue Link: https://gitlab.com/productivity-tools1/productivity-analytics-tool/-/issues/${gitlabIssueIid}`,
             due_on: dueDate,
             assignee: asanaAssigneeId,
             projects: [process.env.ASANA_PROJECT_ID],
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          description: `${issueDescription}\n\nAsana Task Link: ${asanaTaskUrl}`,
+          description: `Asana Task Link: ${asanaTaskUrl}`,
         }),
       });
 
