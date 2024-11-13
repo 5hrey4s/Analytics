@@ -3,23 +3,33 @@ import { NextRequest, NextResponse } from 'next/server';
 interface AsanaTaskEvent {
   action: string;
   resource: {
-    gid: string;        // Asana task ID
-    completed: boolean; // Whether the task is completed
-    name: string;       // Task name
-    notes: string;      // Task description (which contains GitLab issue link)
+    gid: string;
+    completed: boolean;
+    name: string;
+    notes: string;
   };
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Step 1: Handle Asana Webhook Handshake
+    const hookSecret = req.headers.get('x-hook-secret');
+    if (hookSecret) {
+      // If this is the handshake request, respond with the X-Hook-Secret header
+      return NextResponse.json({}, {
+        status: 200,
+        headers: { 'X-Hook-Secret': hookSecret }
+      });
+    }
+
+    // Step 2: Process Event Payload
     const event = (await req.json()) as AsanaTaskEvent;
 
     // Check if the task is marked as completed
     if (event.action === 'changed' && event.resource.completed) {
-      // const taskName = event.resource.name;
       const taskDescription = event.resource.notes;
 
-      // Extract the GitLab issue ID from the task's description or name
+      // Extract GitLab issue ID
       const match = taskDescription.match(/GitLab Issue #(\d+)/);
       if (!match) {
         console.error('GitLab issue ID not found in Asana task description.');
@@ -28,7 +38,7 @@ export async function POST(req: NextRequest) {
 
       const gitlabIssueId = match[1];
 
-      // Step 3: Close the GitLab issue via GitLab API
+      // Close the GitLab issue
       const gitlabResponse = await fetch(
         `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/issues/${gitlabIssueId}`,
         {
@@ -37,9 +47,7 @@ export async function POST(req: NextRequest) {
             'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            state_event: 'close', // This sets the GitLab issue state to "closed"
-          }),
+          body: JSON.stringify({ state_event: 'close' })
         }
       );
 
