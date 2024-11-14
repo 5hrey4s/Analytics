@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       });
 
       const taskData = await taskResponse.json();
-
+      console.log(taskData)
       if (taskData.data.completed) {
         const taskDescription = taskData.data.notes;
 
