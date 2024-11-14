@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Handle Asana Webhook Handshake
     const hookSecret = req.headers.get('x-hook-secret');
     if (hookSecret) {
-      // If this is the handshake request, respond with the X-Hook-Secret header
+      // Respond with the X-Hook-Secret header for verification
       return NextResponse.json({}, {
         status: 200,
         headers: { 'X-Hook-Secret': hookSecret }
@@ -23,9 +23,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 2: Process Event Payload
-    const event = (await req.json()) as AsanaTaskEvent;
-    console.log("event========>",event)
-
+    const event = await req.json();
+    console.log("Received event:", event);
 
     // Check if the task is marked as completed
     if (event.action === 'changed' && event.resource.completed) {
@@ -39,6 +38,7 @@ export async function POST(req: NextRequest) {
       }
 
       const gitlabIssueId = match[1];
+      console.log(`GitLab issue ID extracted: ${gitlabIssueId}`);
 
       // Close the GitLab issue
       const gitlabResponse = await fetch(
