@@ -38,15 +38,15 @@ export async function POST(req: NextRequest) {
       }
 
       const gitlabIssueId = match[1];
-      console.log(`GitLab issue ID extracted: ${gitlabIssueId}`);
+      console.log(GitLab issue ID extracted: ${gitlabIssueId});
 
       // Close the GitLab issue
       const gitlabResponse = await fetch(
-        `https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/issues/${gitlabIssueId}`,
+        https://gitlab.com/api/v4/projects/${process.env.GITLAB_PROJECT_ID}/issues/${gitlabIssueId},
         {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
+            'Authorization': Bearer ${process.env.GITLAB_API_TOKEN},
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ state_event: 'close' })
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      console.log(`GitLab issue #${gitlabIssueId} closed successfully.`);
+      console.log(GitLab issue #${gitlabIssueId} closed successfully.);
       return NextResponse.json({ message: 'GitLab issue closed' }, { status: 200 });
     }
 
@@ -76,4 +76,4 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Internal Server Error', error: 'Unknown error' }, { status: 500 });
     }
   }
-}
+}        
