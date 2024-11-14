@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const hookSecret = req.headers.get('x-hook-secret');
     if (hookSecret) {
       // If this is the handshake request, respond with the X-Hook-Secret header
-      return NextResponse.json({}, {
+      return NextResponse.json({ message: 'No relevant message' }, {
         status: 200,
         headers: { 'X-Hook-Secret': hookSecret }
       });
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Process Event Payload
     const event = (await req.json()) as AsanaTaskEvent;
-
+    console.log("event========>",event)
     // Check if the task is marked as completed
     if (event.action === 'changed' && event.resource.completed) {
       const taskDescription = event.resource.notes;
