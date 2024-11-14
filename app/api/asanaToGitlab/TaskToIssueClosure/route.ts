@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Step 2: Process Event Payload
     const event = await req.json();
-    console.log("Received event:", event);
+    console.log("Received event:", event, event.events.user, event.events.change, event.events.resource );
 
     // Check if the task is marked as completed
     if (event.action === 'changed' && event.resource.completed) {
