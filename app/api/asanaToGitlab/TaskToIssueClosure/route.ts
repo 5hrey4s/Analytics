@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
           {
             method: 'PUT',
             headers: {
-              'Authorization': `Bearer ${process.env.GITLAB_API_TOKEN}`,
+              'Authorization': `Bearer ${process.env.GITLAB_SECRET_TOKEN}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ state_event: 'close' }),
