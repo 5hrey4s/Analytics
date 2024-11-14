@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface AsanaTaskEvent {
-  action: string;
-  resource: {
-    gid: string;
-    completed: boolean;
-    name: string;
-    notes: string;
-  };
-}
+// interface AsanaTaskEvent {
+//   action: string;
+//   resource: {
+//     gid: string;
+//     completed: boolean;
+//     name: string;
+//     notes: string;
+//   };
+// }
 
 export async function POST(req: NextRequest) {
   try {
