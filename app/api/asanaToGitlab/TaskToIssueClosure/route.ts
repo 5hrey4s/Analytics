@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const hookSecret = req.headers.get('x-hook-secret');
     if (hookSecret) {
       // If this is the handshake request, respond with the X-Hook-Secret header
-      return NextResponse.json({ message: 'No relevant message' }, {
+      return NextResponse.json({}, {
         status: 200,
         headers: { 'X-Hook-Secret': hookSecret }
       });
