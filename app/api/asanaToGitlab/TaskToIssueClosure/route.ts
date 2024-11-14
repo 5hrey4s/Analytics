@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
     // Step 2: Process Event Payload
     const event = (await req.json()) as AsanaTaskEvent;
     console.log("event========>",event)
+
+
     // Check if the task is marked as completed
     if (event.action === 'changed' && event.resource.completed) {
       const taskDescription = event.resource.notes;
